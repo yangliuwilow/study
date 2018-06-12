@@ -8,7 +8,23 @@
  $ uname -r
 ```
 
+```shell
+docker安装：
 
+step 1: 安装必要的一些系统工具
+sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+Step 2: 添加软件源信息
+
+sudo yum-config-manager --add-repo <http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo>
+
+Step 3: 更新并安装 
+
+Docker-CEsudo yum makecache fastsudo yum -y install docker-ce
+
+ Step 4: 开启Docker服务
+
+sudo service docker start
+```
 
 
 
@@ -68,6 +84,27 @@ redis               latest              bfcb1f6df2db        5 weeks ago         
  #    -d 后台启动，-p暴露端口
 
 ```
+
+### docker  zookeeper安装
+
+```shell
+
+# docker images
+# docker pull registry.docker-cn.com/library/zookeeper                         //通过镜像下载
+#或者  方法二：
+[root@localhost ~]# docker pull zookeeper
+#启动
+[root@localhost ~]# docker images
+REPOSITORY                                 TAG                 IMAGE ID            CREATED             SIZE
+registry.docker-cn.com/library/zookeeper   latest              2a8fecd00fba        4 days ago          146MB
+[root@localhost ~]# docker run --name zookeeper -p 2181:2181  --restart always -d 2a8fecd00fba
+ 
+#This image includes EXPOSE 2181 2888 3888 (the zookeeper client port, follower port, election port respectively), 选举等功能功能需要开启 2888 3888  端口
+```
+
+### 
+
+
 
 ### docker  rabbitmq安装
 
