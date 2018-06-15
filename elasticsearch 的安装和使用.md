@@ -7,7 +7,7 @@
 #docker  search elasticsearch    //搜索
 #docker pull registry.docker-cn.com/library/elastiscearch   //下载 
 或者
-[root@localhost ~]# docker pull elasticsearch  下载
+[root@localhost ~]# docker pull elasticsearch:2.4.6  下载
 
 # docker  images
 
@@ -53,12 +53,6 @@ https://www.elastic.co/guide/cn/elasticsearch/guide/current/_indexing_employee_d
     "interests": [ "sports", "music" ]
 }
 ```
-
-注意，路径 /megacorp/employee/1 包含了三部分的信息：
-
- ~~~json
-
- ~~~
 
 注意，路径 `/megacorp/employee/1` 包含了三部分的信息：
 

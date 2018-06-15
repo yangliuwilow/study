@@ -82,7 +82,7 @@ spring:
 
 ~~~
 
-###2.使用jest（方法二）
+###2.使用spring-boot-starter-data-elasticsearch（方法二）
 
 注意：Springboot 添加的elasticsearch  版本为2.4.6 ，所有安装的elasticsearch   应该为2.4.6 
 
@@ -244,4 +244,4 @@ public interface BookRepository extends ElasticsearchRepository<Book,Integer> {
 ```
 
 
-​      
+​      相关博客地址：https://blog.csdn.net/tianyaleixiaowu/article/category/6952508
