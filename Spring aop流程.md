@@ -1,4 +1,4 @@
-```
+```java
 流程：
 *     1）、传入配置类，创建ioc容器
 *     2）、注册配置类，调用refresh（）刷新容器；AbstractApplicationContext.refresh()
@@ -132,9 +132,10 @@
 断点位置：
 
  AbstractAutoProxyCreator.setBeanFactory()
- AbstractAutoProxyCreator.postProcessBeforeInstantiation()//有后置处理器的逻辑；
 
- AbstractAdvisorAutoProxyCreator.setBeanFactory()-》initBeanFactory()  //第一个断点这个位置
+ AbstractAutoProxyCreator.postProcessBeforeInstantiation()                  //有后置处理器的逻辑；
+
+ AbstractAdvisorAutoProxyCreator.setBeanFactory()->initBeanFactory()  //第一个断点这个位置
 
  AnnotationAwareAspectJAutoProxyCreator.initBeanFactory()
 
@@ -142,7 +143,7 @@
 
 
 
-###  1）、传入配置类，创建ioc容器
+##  1）、传入配置类，创建ioc容器
 
 ~~~java
 public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
@@ -154,22 +155,22 @@ public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
 
 
 
-### 2）、注册配置类，调用refresh（）刷新容器；
+## 2）、注册配置类，调用refresh（）刷新容器；
 
 ```java
 AbstractApplicationContext.refresh() //刷新
 ```
 
-### 3）、注册bean的后置处理器来方便拦截bean的创建
+##3）、注册bean的后置处理器来方便拦截bean的创建
 
   refresh()中的registerBeanPostProcessors(beanFactory);  
 
-```
+```java
 // Register bean processors that intercept bean creation.
 registerBeanPostProcessors(beanFactory);
 ```
 
-### 3.1  注册BeanPostProcessors
+### 3.1  注册BeanPostProcessors后置处理器
 
 ```java
 PostProcessorRegistrationDelegate.registerBeanPostProcessors()//方法中
@@ -178,17 +179,18 @@ public static void registerBeanPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
 		//先获取ioc容器已经定义了的需要创建对象的所有BeanPostProcessor（未创建只是定义了的）
 		String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
+    //org.springframework.aop.config.internalAutoProxyCreator  就是之前注册的AnnotationAwareAspectJAutoProxyCreator
 
 	 
 		int beanProcessorTargetCount = beanFactory.getBeanPostProcessorCount() + 1 + postProcessorNames.length;
 		beanFactory.addBeanPostProcessor(new BeanPostProcessorChecker(beanFactory, beanProcessorTargetCount));
 
-		// Separate between BeanPostProcessors that implement PriorityOrdered,
-		// Ordered, and the rest.
+		
 		List<BeanPostProcessor> priorityOrderedPostProcessors = new ArrayList<BeanPostProcessor>();
 		List<BeanPostProcessor> internalPostProcessors = new ArrayList<BeanPostProcessor>();
 		List<String> orderedPostProcessorNames = new ArrayList<String>();
 		List<String> nonOrderedPostProcessorNames = new ArrayList<String>();
+    // 分别分离 BeanPostProcessors 实现了 PriorityOrdered,Ordered, and the rest. 的接口
 		for (String ppName : postProcessorNames) {
 			if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 				BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -204,14 +206,15 @@ public static void registerBeanPostProcessors(
 				nonOrderedPostProcessorNames.add(ppName);
 			}
 		}
-
-		// First, register the BeanPostProcessors that implement PriorityOrdered.
+        
+		// 优先注册实现了PriorityOrdered接口的BeanPostProcessor；
 		sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
 		registerBeanPostProcessors(beanFactory, priorityOrderedPostProcessors);
 
-		// Next, register the BeanPostProcessors that implement Ordered.
+		// 再注册实现了Ordered接口的BeanPostProcessor；
 		List<BeanPostProcessor> orderedPostProcessors = new ArrayList<BeanPostProcessor>();
 		for (String ppName : orderedPostProcessorNames) {
+            //获取bean ,没有bean就创建这个bean
 			BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
 			orderedPostProcessors.add(pp);
 			if (pp instanceof MergedBeanDefinitionPostProcessor) {
@@ -219,9 +222,10 @@ public static void registerBeanPostProcessors(
 			}
 		}
 		sortPostProcessors(orderedPostProcessors, beanFactory);
+         //把BeanPostProcessor注册到BeanFactory中beanFactory.addBeanPostProcessor(postProcessor);
 		registerBeanPostProcessors(beanFactory, orderedPostProcessors);
 
-		// Now, register all regular BeanPostProcessors.
+		// 再注册没实现优先级接口的BeanPostProcessor；
 		List<BeanPostProcessor> nonOrderedPostProcessors = new ArrayList<BeanPostProcessor>();
 		for (String ppName : nonOrderedPostProcessorNames) {
 			BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -244,4 +248,137 @@ public static void registerBeanPostProcessors(
 
 ```
 
-###  
+### 3.4 再给容器中注册实现了Ordered接口的BeanPostProcessor；
+
+### 3.5 注册没实现优先级接口的BeanPostProcessor；
+
+### 3.6 注册BeanPostProcessor
+
+  实际上就是创建BeanPostProcessor对象，保存在容器中；
+
+  创建internalAutoProxyCreator的BeanPostProcessor【AnnotationAwareAspectJAutoProxyCreator】
+
+* 1）、创建Bean的实例
+
+  ```java
+  //获取 getBean()->创建 doCreateBean()->do
+  BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+  @Override
+  public <T> T getBean(String name, Class<T> requiredType) throws BeansException {
+      return doGetBean(name, requiredType, null, false);
+  }	
+  ```
+
+* 2）、populateBean；给bean的各种属性赋值  AbstractAutowireCapableBeanFactory.doCreateBean()->populateBean()
+
+* 3）、initializeBean：初始化bean；  AbstractAutowireCapableBeanFactory.doCreateBean()-initializeBean()
+
+  
+
+  ```java
+  protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd) {
+     if (System.getSecurityManager() != null) {
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
+           @Override
+           public Object run() {
+              invokeAwareMethods(beanName, bean);
+              return null;
+           }
+        }, getAccessControlContext());
+     }
+     else {
+        // 1.处理Aware接口的方法回调  
+        invokeAwareMethods(beanName, bean);
+     }
+  
+     Object wrappedBean = bean;
+     if (mbd == null || !mbd.isSynthetic()) {
+        //2 .应用后置处理器的postProcessBeforeInitialization()方法,就是bean的before()
+        wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+     }
+  
+     try {
+         //3.执行自定义的初始化方法 ,执行setBeanFactory()方法
+        invokeInitMethods(beanName, wrappedBean, mbd);
+     }
+     catch (Throwable ex) {
+        throw new BeanCreationException(
+              (mbd != null ? mbd.getResourceDescription() : null),
+              beanName, "Invocation of init method failed", ex);
+     }
+  
+     if (mbd == null || !mbd.isSynthetic()) {
+         //4 .应用后置处理器的postProcessAfterInitialization()方法,就是bean的After()
+        wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+     }
+     return wrappedBean;
+  }
+  ```
+
+  
+
+  * 1）、invokeAwareMethods处理Aware接口的方法回调  
+
+    ```java
+    //AbstractAutowireCapableBeanFactory
+    private void invokeAwareMethods(final String beanName, final Object bean) {
+       if (bean instanceof Aware) {
+          if (bean instanceof BeanNameAware) {
+             ((BeanNameAware) bean).setBeanName(beanName);
+          }
+          if (bean instanceof BeanClassLoaderAware) {
+             ((BeanClassLoaderAware) bean).setBeanClassLoader(getBeanClassLoader());
+          }
+           //执行 AnnotationAwareAspectJAutoProxyCreator 的setBeanFactory()方法
+          if (bean instanceof BeanFactoryAware) {
+             ((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
+          }
+       }
+    }
+    ```
+
+  * 2）、applyBeanPostProcessorsBeforeInitialization()：执行应用后置处理器的postProcessBeforeInitialization（）方法
+
+    ```java
+    public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
+          throws BeansException {
+    
+       Object result = existingBean;
+       for (BeanPostProcessor beanProcessor : getBeanPostProcessors()) {
+          result = beanProcessor.postProcessBeforeInitialization(result, beanName);
+          if (result == null) {
+             return result;
+          }
+       }
+       return result;
+    }
+    ```
+
+  * 3）、invokeInitMethods()；执行自定义的初始化方法
+
+    
+
+  * 4）、applyBeanPostProcessorsAfterInitialization()；执行后置处理器的postProcessAfterInitialization（）；
+
+* 4）、BeanPostProcessor(AnnotationAwareAspectJAutoProxyCreator)创建成功；-->aspectJAdvisorsBuilder
+
+### 3.7   把BeanPostProcessor注册到BeanFactory中  ,注册完成 
+
+```java
+ //beanFactory.addBeanPostProcessor(postProcessor);
+
+registerBeanPostProcessors(beanFactory, orderedPostProcessors);
+```
+
+​    AnnotationAwareAspectJAutoProxyCreator => InstantiationAwareBeanPostProcessor
+
+
+
+##  4）、finishBeanFactoryInitialization(beanFactory);
+
+AbstractApplicationContext.refresh()-->finishBeanFactoryInitialization(beanFactory); 方法中
+
+完成BeanFactory初始化工作；创建剩下的单实例bean    
+
+
+

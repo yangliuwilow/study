@@ -37,7 +37,7 @@ AOP：【动态代理】
     
 
     **切面类上添加：@Aspect 注解**
-    
+  
 
   ~~~java
    @Aspect
@@ -136,11 +136,11 @@ AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
 public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry) {
 		return registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry, null);
 }
-//第二步：
+//第二步： 注册AnnotationAwareAspectJAutoProxyCreator 类到容器中去
 public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry, Object source) {
 		return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);   //注册或者升级 
 }
-//第四步：
+//第三步：
 private static BeanDefinition registerOrEscalateApcAsRequired(Class<?> cls, BeanDefinitionRegistry registry, Object source) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
   //如果容器中存在这个org.springframework.aop.config.internalAutoProxyCreator //第一次没有   
@@ -155,11 +155,12 @@ private static BeanDefinition registerOrEscalateApcAsRequired(Class<?> cls, Bean
 			}
 			return null;
 		}
-    //容器中注册  AnnotationAwareAspectJAutoProxyCreator 这个bean
+    //容器中注册  AnnotationAwareAspectJAutoProxyCreator 这个bean定义
 		RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
 		beanDefinition.setSource(source);
 		beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);
 		beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+    //注册名称为：org.springframework.aop.config.internalAutoProxyCreator 的 AnnotationAwareAspectJAutoProxyCreator 定义，并未创建到容器
 		registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
 		return beanDefinition;
 }
@@ -178,18 +179,25 @@ AnnotationAwareAspectJAutoProxyCreator继承关系：
    					->AbstractAutoProxyCreator
    					 implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware
   						//关注后置处理器（在bean初始化完成前后做事情）、自动装配BeanFactory
- // 重点处理：
+ // 重点处理在：
   public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware
+		
   SmartInstantiationAwareBeanPostProcessor  //(bean的后置处理器 PostProcessor)	
   BeanFactoryAware    //获取beanFactory 功能
   
- AbstractAutoProxyCreator.setBeanFactory()
- AbstractAutoProxyCreator.postProcessBeforeInstantiation()//有后置处理器的逻辑；
+// 重点处理方法：  
+1. AnnotationAwareAspectJAutoProxyCreator.initBeanFactory()；
+
+2.AbstractAdvisorAutoProxyCreator.setBeanFactory()-> initBeanFactory()；
   
- AbstractAdvisorAutoProxyCreator.setBeanFactory()-》initBeanFactory()
+3.AbstractAutoProxyCreator.setBeanFactory();
+      
+4.AbstractAutoProxyCreator.postProcessBeforeInstantiation()//有后置处理器的逻辑；
   
- AnnotationAwareAspectJAutoProxyCreator.initBeanFactory()
+
+  
+ 
   						
 ~~~
 
