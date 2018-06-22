@@ -7,11 +7,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 
-
-
-
-
-
 @ComponentScan("com.willow.ext")
 @Configuration
 public class ExtConfig {
@@ -20,4 +15,5 @@ public class ExtConfig {
     public Color color(){
         return  new Color();
     }
+
 }

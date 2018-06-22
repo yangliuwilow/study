@@ -1,4 +1,4 @@
-## Spring IOC  扩展原理之BeanFactoryPostProcessor
+## Spring IOC  扩展原理之BeanFactoryPostProcessor和事件监听ApplicationListener
 
 
 
@@ -251,7 +251,7 @@ public void test01() {
 
 
 
-### 3.3事件多播器（派发器）初始化：
+### 3.3事件多播器（派发器）初始化原理：
 
 1）、容器创建对象：refresh();
 
@@ -284,7 +284,7 @@ protected void initApplicationEventMulticaster() {
 
 ​      
 
-###  3.4 注册监听器：
+###  3.4 注册监听器原理：
 
 1）、容器创建对象：refresh();
 
@@ -317,6 +317,73 @@ protected void registerListeners() {
 ~~~
 
 
+
+
+
+### 3.4 @EventListener创建监听器：
+
+####  3.4.1 基于注解的方式创建监听器：
+
+~~~java
+@Component
+public class AnnotationListener {
+    
+    @EventListener(classes={ApplicationEvent.class}) //classes 监听器的类型
+    public void listen(ApplicationEvent event){
+        System.out.println("UserService...监听到的事件："+event);
+    }
+}
+~~~
+
+
+
+#### 3.4.2 @EventListener注解原理
+
+原理：使用EventListenerMethodProcessor处理器来解析方法上的@EventListener；
+
+再看SmartInitializingSingleton  这个类的原理即可
+
+```java
+public class EventListenerMethodProcessor implements SmartInitializingSingleton, ApplicationContextAware 
+```
+
+#### SmartInitializingSingleton 原理：->执行这个方法afterSingletonsInstantiated(); 
+
+afterSingletonsInstantiated()；是在所有bean初始化完成之后调用的，
+
+断点在EventListenerMethodProcessor.afterSingletonsInstantiated()方法上查看执行流程
+
+1）、ioc容器创建对象并refresh()；
+
+2）、finishBeanFactoryInitialization(beanFactory);初始化剩下的单实例bean；
+
+​       1）、DefaultListableBeanFactory.preInstantiateSingletons()->先创建所有的单实例bean；getBean();
+
+​       2）、获取所有创建好的单实例bean，判断是否是SmartInitializingSingleton类型的；如果是就调用afterSingletonsInstantiated();
+
+~~~java
+//这个类的DefaultListableBeanFactory.preInstantiateSingletons() 
+for (String beanName : beanNames) {
+    Object singletonInstance = getSingletone(beanName);
+    //  2）、获取所有创建好的单实例bean，判断是否是SmartInitializingSingleton类型的；
+    if (singletonInstance instanceof SmartInitializingSingleton) {
+        final SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
+        if (System.getSecurityManager() != null) {
+            AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                @Override
+                public Object run() {
+                    smartSingleton.afterSingletonsInstantiated();
+                    return null;
+                }
+            }, getAccessControlContext());
+        }
+        else {
+            //调用SmartInitializingSingleton类型的这个方法afterSingletonsInstantiated()
+            smartSingleton.afterSingletonsInstantiated();
+        }
+    }
+}
+~~~
 
 
 

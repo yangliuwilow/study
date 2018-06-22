@@ -1,6 +1,6 @@
 
 
-Spring 注解  事物开发
+Spring 注解  事物@Transactional开发
 
 ## 一、声明式事务：
 
