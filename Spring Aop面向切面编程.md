@@ -21,15 +21,13 @@ AOP：【动态代理】
   
   ~~~
 
-  ### 二、切面通知类型：
+  ### 二、切面通知类型：AbstractAspectJAdvice
 
   -  前置通知(@Before)：在目标方法运行之前运行
   -   后置通知(@After)：在目标方法运行结束之后运行（无论方法正常结束还是异常结束）
 
-   * 返回通知(@AfterReturning)：在目标方法正常返回之后运行
-
+   * 返回通知(@AfterReturning)：在目标方法正常返回之后运行 AspectJAfterReturningAdvice
    * 异常通知(@AfterThrowing)： 在目标方法出现异常以后运行
-
    * 环绕通知(@Around)：动态代理，手动推进目标方法运行（joinPoint.procced()）
 
     
@@ -37,7 +35,7 @@ AOP：【动态代理】
     
 
     **切面类上添加：@Aspect 注解**
-  
+
 
   ~~~java
    @Aspect

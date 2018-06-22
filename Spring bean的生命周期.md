@@ -103,7 +103,7 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
 
 ### BeanPostProcessor执行流程和源码分析：
 
-postProcessAfterInitialization方法上断点查看执行流程
+MyBeanPostProcessor.postProcessAfterInitialization()方法上断点查看执行流程,(自定义的这个方法上)
 
 ```java
 遍历得到容器中所有的BeanPostProcessor；挨个执行beforeInitialization，
@@ -113,9 +113,9 @@ postProcessAfterInitialization方法上断点查看执行流程
 * populateBean(beanName, mbd, instanceWrapper);给bean进行属性赋值
 * initializeBean
 * {
-* applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
-* invokeInitMethods(beanName, wrappedBean, mbd);执行自定义初始化
-* applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+* applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName); //前置
+* invokeInitMethods(beanName, wrappedBean, mbd);//执行自定义初始化
+* applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName); //后置
 *}
 ```
 

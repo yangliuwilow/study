@@ -3,6 +3,8 @@ package com.willow.annotation;
 import com.willow.aop.AopConfig;
 import com.willow.aop.Calculate;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
@@ -10,6 +12,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  */
 public class AppTest {
 
+    private Logger logger=LoggerFactory.getLogger(AppTest.class);
 
     @Test
     public void test(){
@@ -17,7 +20,7 @@ public class AppTest {
         String[] beanDefinitionNames = applicationContext.getBeanDefinitionNames();
 
         for (String beanName:beanDefinitionNames){
-            System.out.println("############"+beanName);
+            logger.info("############"+beanName);
         }
         Calculate calculate=  applicationContext.getBean(Calculate.class);
         calculate.add(1,2);

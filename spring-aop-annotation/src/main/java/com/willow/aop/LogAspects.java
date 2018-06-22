@@ -14,12 +14,13 @@ public class LogAspects {
     //抽取公共的切入点表达式
     //1、本类引用
     //2、其他的切面引用
-    @Pointcut("execution(* * com.willow.aop.Calculate.*(..))")
+    @Pointcut("execution(* com.willow.aop.Calculate.*(..) )")
     public void pointCut(){};
     //前置通知
     @Before("execution(* com.willow.aop.Calculate.*(..) )")
     public void logStart(JoinPoint joinPoint){
         Object[] args = joinPoint.getArgs();
+
         System.out.println("****"+joinPoint.getSignature().getName()+"运行。。。@Before:参数列表是：{"+ Arrays.asList(args)+"}");
 
     }
