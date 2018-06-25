@@ -1,6 +1,6 @@
 package com.willow;
 
-import com.willow.config.AppConfig;
+import com.willow.config.WebConfig;
 import com.willow.config.RootConfig;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
@@ -17,7 +17,7 @@ public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServl
     //获取web容器的配置类（SpringMVC配置文件）  子容器；
     @Override
     protected Class<?>[] getServletConfigClasses() {
-        return new Class<?>[]{AppConfig.class};
+        return new Class<?>[]{WebConfig.class};
     }
     //获取DispatcherServlet的映射信息
     //  /：拦截所有请求（包括静态资源（xx.js,xx.png）），但是不包括*.jsp；
