@@ -1,4 +1,4 @@
-#        SpringMvc  容器注解配置和原理： 
+# Servlet3 ServletContainerInitializer与Spring Web和原理：
 
  文档地址：https://docs.spring.io/spring/docs/5.0.2.RELEASE/spring-framework-reference/web.html#mvc-introduction
 
@@ -47,13 +47,25 @@
 
 ### 1、web容器在启动的时候
 
-   会扫描每个jar包下的META-INF/services/javax.servlet.ServletContainerInitializer
+​		在web容器启动时为提供给第三方组件机会做一些初始化的工作，例如注册servlet或者filtes等，servlet规范中通过`ServletContainerInitializer`实现此功能。每个框架要使用`ServletContainerInitializer`就必须在对应的jar包的META-INF/services 目录创建一个名为`javax.servlet.ServletContainerInitializer`的文件，文件内容指定具体的`ServletContainerInitializer`实现类，那么，当web容器启动时就会运行这个初始化器做一些组件内的初始化工作。
 
-   在jarMaven: org.springframework:spring-web:4.3.11.RELEASE   有对应的文件，
+一般伴随着`ServletContainerInitializer`一起使用的还有`HandlesTypes`注解，通过`HandlesTypes`可以将感兴趣的一些类注入到`ServletContainerInitializerde`的onStartup方法作为参数传入。
 
-​    中指定了org.springframework.web.SpringServletContainerInitializer这个类
+Tomcat容器的`ServletContainerInitializer`机制的实现，主要交由Context容器和ContextConfig监听器共同实现，ContextConfig监听器负责在容器启动时读取每个web应用的`WEB-INF/lib`目录下包含的jar包的`META-INF/services/javax.servlet.ServletContainerInitializer`，以及web根目录下的`META-INF/services/javax.servlet.ServletContainerInitializer`，通过反射完成这些`ServletContainerInitializer`的实例化，然后再设置到Context容器中，最后Context容器启动时就会分别调用每个`ServletContainerInitializer`的onStartup方法，并将感兴趣的类作为参数传入
+
+
+
+首先通过ContextConfig监听器遍历每个jar包或web根目录的`META-INF/services/javax.servlet.ServletContainerInitializer`文件，根据读到的类路径实例化每个`ServletContainerInitializer`；然后再分别将实例化好的`ServletContainerInitializer`设置进Context容器中；最后Context容器启动时分别调用所有`ServletContainerInitializer`对象的onStartup方法。
+
+假如读出来的内容为`com.seaboat.mytomcat.CustomServletContainerInitializer`，则通过反射实例化一个`CustomServletContainerInitializer`对象，这里涉及到一个`@HandlesTypes`注解的处理，被它标明的类需要作为参数值传入到onStartup方法。 
+
+​         
 
 ### 2、加载这个文件指定的类（SpringServletContainerInitializer）
+
+​		在jarMaven: org.springframework:spring-web:4.3.11.RELEASE   有对应的文件，META-INF/services/javax.servlet.ServletContainerInitializer
+
+中指定了org.springframework.web.SpringServletContainerInitializer这个类
 
 ### 3、Spring的应用一启动会加载感兴趣的WebApplicationInitializer接口的下的所有组件；
 
