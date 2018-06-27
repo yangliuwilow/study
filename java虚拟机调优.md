@@ -70,9 +70,64 @@ Eden：From Survivor:To Survivor=8:1:1
 
 -XX   不稳定参数，下一个版本可能会取消
 
+bjmashibing(马士兵微信)
+
+### 三、java对象的分配
+
+- 栈上分配
+
+  - 线程私有小对象
+  - 无逃逸
+  - 支持标量替换
+  - 无需调整
+
+- 线程本地分配TLAB(Thread Locla Allacation Buffer )
+   -  占用eden去， 每个线程默认分配1%(每个线程都有一个线程本地空间，)
+   -  多线程的时候不用竞争eden就可以申请空间，提高效率
+   -  小对象
+   -  无需调整
+-  老年代
+   -  大对象
+
+  
+
+### JVM参数说明
+
+```java
+-XX:-UseTLABTLAB Thread  Local Allocation Buffer  //关闭线程本地缓存区   （线程本地缓存区在eden区）
+  
+-XX:-DoEscapeAnalysis 关闭逃逸分析 
+
+-XX:-EliminateAllocations  不做标量 分配
+
+-XX:+PrintGCDetails   打印GC详情
+
+-XX:+PrintGC
+
+
+idea JVM参数设置  (+EliminateAllocations)  加号代表开启
+- server  -XX:-DoEscapeAnalysis   -XX:-EliminateAllocations -XX:+UseTLAB -XX:+PrintGC 
+
+-XX:HeapDumpPath     //堆内存信息输出地址，
+-Xms分配堆最小内存，  //默认为物理内存的1/64；
+-Xmx分配最大内存，    //默认为物理内存的1/4。
+
+-server -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=c:\jvm.dump -XX:+PrintGCDetails -Xms10m -Xmx10m
+
+```
 
 
 
+~~~java
+Heap
+ PSYoungGen      total 213760K, used 46802K [0x2f2c0000, 0x3dc00000, 0x3dc00000)  //新生代
+  eden space 212736K, 21% used [0x2f2c0000,0x32070a70,0x3c280000)
+  from space 1024K, 1% used [0x3c280000,0x3c284000,0x3c380000)
+  to   space 1024K, 0% used [0x3db00000,0x3db00000,0x3dc00000)
+ ParOldGen       total 43776K, used 574K [0x12000000, 0x14ac0000, 0x2f2c0000)  //老年代
+  object space 43776K, 1% used [0x12000000,0x1208f970,0x14ac0000)
+ Metaspace       used 1895K, capacity 2244K, committed 2368K, reserved 4480K //永久区
+~~~
 
 
 
