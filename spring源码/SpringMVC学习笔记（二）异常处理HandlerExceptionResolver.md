@@ -25,6 +25,6 @@ SpringMVC学习笔记（二） 视图解析器
 
 
 ```
-HandlerMapping //请求与处理器之间的映射
+HandlerMapping //请求到处理器之前的映射
 HandlerAdapter// hanler适配器
 ```
