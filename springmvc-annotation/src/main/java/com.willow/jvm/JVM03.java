@@ -15,13 +15,21 @@ public class JVM03 {
     }
 
     public static void main(String[] args){
-       try{
+       /*try{
            r();
        }catch (Throwable t){
            System.out.println(count);
            t.printStackTrace();
 
-       }
+       }*/
+       test1();
+    }
 
+    public static void test1(){
+        System.out.println("#########"+hash("123")); ;
+    }
+    static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 }

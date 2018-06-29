@@ -133,11 +133,30 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urando
 
 
 
-#### 7、构建镜像并发布到远程服务器 
+### 8、构建镜像并发布到远程服务器 
 
 cmd进去项目的目录
 
-```cmake
+```java
 mvn clean package docker:build 
 ```
 
+### 9、查看镜像，运行环境
+
+~~~shell
+[root@localhost home]# docker images 
+REPOSITORY                                 TAG                 IMAGE ID            CREATED             SIZE
+springboot-docker/springboot-docker        latest              4fb457dd9da3        5 minutes ago       672MB
+
+#运行环境 
+[root@localhost home]# docker run -d -p 8080:8080  --name springboot-docker  4fb457dd9da3
+
+~~~
+
+### 10、本地访问
+
+~~~java
+http://192.168.7.108:8080/hello/say
+~~~
+
+文档地址：https://spring.io/guides/gs/spring-boot-docker/
