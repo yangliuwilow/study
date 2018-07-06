@@ -68,7 +68,6 @@ public void test01() throws IOException {
     } finally {
         openSession.close();
     }
-
 }
 ~~~
 
