@@ -178,7 +178,7 @@ private Object wrapCollection(final Object object) {
 }
 ~~~
 
-### 7、CachingExecutor执行query查询
+### 7、CachingExecutor执行query查询获取到BoundSql
 
 BoundSql：
 
@@ -202,7 +202,7 @@ public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds r
 public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
     throws SQLException {
     Cache cache = ms.getCache();
-    if (cache != null) { //判断是否有二级缓存，有缓存执行缓存
+    if (cache != null) { //判断是否有二级缓存，有缓存执行缓存查询
         flushCacheIfRequired(ms);
         if (ms.isUseCache() && resultHandler == null) {
             ensureNoOutParams(ms, parameterObject, boundSql);
@@ -222,6 +222,8 @@ public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds r
 
 ### 8、执行器：SimpleExecutor 的query方法
 
+​    先从一级缓存查询（localCache），如果有的话执行handleLocallyCachedOutputParameters
+
 ~~~java
 @SuppressWarnings("unchecked")
 @Override
@@ -236,7 +238,7 @@ public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBoun
     List<E> list;
     try {
         queryStack++;
-        //localCache  一级缓存
+        //localCache  获取一级缓存
         list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
         if (list != null) {  
             handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
@@ -297,18 +299,298 @@ ResultHandler：
 
 BoundSql：SQL语句信息
 
-```Java
+```java
 //doQuery:58, SimpleExecutor
 @Override
 public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
-  Statement stmt = null;
+  Statement stmt = null; //原生jdbc的Statement 
   try {
-    Configuration configuration = ms.getConfiguration();
-    StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+    Configuration configuration = ms.getConfiguration(); //当前的配置信息
+    StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql); //Statement的处理器
+     //创建Statement ,封装参数
     stmt = prepareStatement(handler, ms.getStatementLog());
+    //执行查询   
     return handler.<E>query(stmt, resultHandler);
   } finally {
     closeStatement(stmt);
   }
 }
 ```
+#### 10.1、通过Configuration创建statementHandler的处理器
+
+~~~java
+public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    //根据配置的statementType属性，通过路由创建statementHandler
+    StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    // 通过拦截器链包装statementHandler返回
+    statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
+    return statementHandler;
+}
+~~~
+
+##### 10.1.1、在RoutingStatementHandler中初始化StatementHandler
+
+```java
+public RoutingStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    //根据statementType 的类型创建不同的StatementHandler ，在xml中SQL语句中配置属性
+    //例如：<select id="selectById" resultMap="BaseResultMap"  statementType="PREPARED">
+    switch (ms.getStatementType()) {
+        case STATEMENT: 
+            delegate = new SimpleStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
+            break;
+        case PREPARED:  //默认的StatementHandler
+            delegate = new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
+            break;
+        case CALLABLE:
+            delegate = new CallableStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
+            break;
+        default:
+            throw new ExecutorException("Unknown statement type: " + ms.getStatementType());
+    }
+}
+
+
+
+```
+
+| statementType | STATEMENT，PREPARED 或 CALLABLE 的一个。这会让 MyBatis 分别使用 Statement，PreparedStatement 或 CallableStatement，默认值：PREPARED。 |
+| --------------- | ------------------------------------------------------------ |
+|                 |                                                              |
+
+###### 10.1.1.1 **初始化StatementHandler** 和创建parameterHandler和resultSetHandler
+
+~~~java
+// BaseStatementHandler
+protected BaseStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    this.configuration = mappedStatement.getConfiguration();
+    this.executor = executor;
+    this.mappedStatement = mappedStatement;
+    this.rowBounds = rowBounds;
+
+    this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+    this.objectFactory = configuration.getObjectFactory();
+
+    if (boundSql == null) { // issue #435, get the key before calculating the statement
+        generateKeys(parameterObject);
+        boundSql = mappedStatement.getBoundSql(parameterObject);
+    }
+
+    this.boundSql = boundSql;
+
+    //创建参数处理器parameterHandler
+    this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
+    //创建resultSetHandler
+    this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
+}
+~~~
+
+#### 10.2、通过StatementHandler创建Statement 
+
+~~~java
+private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
+    Statement stmt;
+    Connection connection = getConnection(statementLog); //获取数据库连接
+    // 通过Connection 创建Statement ；connection.prepareStatement(sql);
+    stmt = handler.prepare(connection, transaction.getTimeout()); //创建Statement
+    handler.parameterize(stmt);//参数预编译
+    return stmt;
+}
+~~~
+
+
+
+##### 10.2.1 参数预编译parameterize
+
+```java
+@Override
+public void parameterize(Statement statement) throws SQLException {
+   //先创建PreparedStatement ，通过parameterHandler 预编译参数，
+  parameterHandler.setParameters((PreparedStatement) statement);
+}
+//参数预编译 setParameters:92, DefaultParameterHandler
+public void setParameters(PreparedStatement ps) {
+    ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
+    List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    if (parameterMappings != null) {
+        for (int i = 0; i < parameterMappings.size(); i++) {
+            ParameterMapping parameterMapping = parameterMappings.get(i);
+            if (parameterMapping.getMode() != ParameterMode.OUT) {
+                Object value;
+                String propertyName = parameterMapping.getProperty();
+                if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
+                    value = boundSql.getAdditionalParameter(propertyName);
+                } else if (parameterObject == null) {
+                    value = null;
+                } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+                    value = parameterObject;
+                } else {
+                    MetaObject metaObject = configuration.newMetaObject(parameterObject);
+                    value = metaObject.getValue(propertyName);
+                }
+                //类型处理器
+                TypeHandler typeHandler = parameterMapping.getTypeHandler();
+                JdbcType jdbcType = parameterMapping.getJdbcType();
+                if (value == null && jdbcType == null) {
+                    jdbcType = configuration.getJdbcTypeForNull();
+                }
+                try {
+                    //调用typeHandler给PreparedStatement的SQL预编译设置参数
+                    typeHandler.setParameter(ps, i + 1, value, jdbcType);
+                } catch (TypeException e) {
+                    throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);
+                } catch (SQLException e) {
+                    throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);
+                }
+            }
+        }
+    }
+}
+```
+
+
+
+### 11、执行查询query操作返回结果集  
+
+~~~java
+//query:79, RoutingStatementHandler
+@Override
+public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
+    return delegate.<E>query(statement, resultHandler);
+}
+//query:64, PreparedStatementHandler
+public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
+    PreparedStatement ps = (PreparedStatement) statement;
+    ps.execute(); //执行查询
+    return resultSetHandler.<E> handleResultSets(ps); 
+    //用结果集处理器resultSetHandler，处理返回结果
+}
+~~~
+
+
+
+### 12、使用resultSetHandler处理返回结果
+
+~~~java
+//handleResultSets:171, DefaultResultSetHandler
+@Override
+public List<Object> handleResultSets(Statement stmt) throws SQLException {
+    ErrorContext.instance().activity("handling results").object(mappedStatement.getId());
+
+    final List<Object> multipleResults = new ArrayList<Object>();
+
+    int resultSetCount = 0;
+    //如果有返回结果，获取返回参数的 {列名columnNames，类型classNames，数据库字段类型jdbcTypes}
+    ResultSetWrapper rsw = getFirstResultSet(stmt);//获取到返回的列和列类型，
+
+    //获取到xml中配置所有的resultMap
+    List<ResultMap> resultMaps = mappedStatement.getResultMaps();
+    int resultMapCount = resultMaps.size();
+    validateResultMapsCount(rsw, resultMapCount);
+    while (rsw != null && resultMapCount > resultSetCount) {
+        ResultMap resultMap = resultMaps.get(resultSetCount);
+        //处理结果集
+        handleResultSet(rsw, resultMap, multipleResults, null); 
+        rsw = getNextResultSet(stmt);
+        cleanUpAfterHandlingResultSet();
+        resultSetCount++;
+    }
+
+    String[] resultSets = mappedStatement.getResultSets();
+    if (resultSets != null) {
+        while (rsw != null && resultSetCount < resultSets.length) {
+            ResultMapping parentMapping = nextResultMaps.get(resultSets[resultSetCount]);
+            if (parentMapping != null) {
+                String nestedResultMapId = parentMapping.getNestedResultMapId();
+                ResultMap resultMap = configuration.getResultMap(nestedResultMapId);
+                handleResultSet(rsw, resultMap, null, parentMapping);
+            }
+            rsw = getNextResultSet(stmt);
+            cleanUpAfterHandlingResultSet();
+            resultSetCount++;
+        }
+    }
+
+    return collapseSingleResultList(multipleResults);
+}
+~~~
+
+
+
+#### 12.1、使用TypeHandler转换获取value值
+
+执行顺序：![1530847453369](C:\Users\ADMINI~1\AppData\Local\Temp\1530847453369.png)
+
+ 
+
+~~~java
+//DefaultResultSetHandler 中，通过javabean属性映射，获取对应值，通过TypeHandler转换相应类型的值
+private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
+    throws SQLException {
+    if (propertyMapping.getNestedQueryId() != null) {
+        return getNestedQueryMappingValue(rs, metaResultObject, propertyMapping, lazyLoader, columnPrefix);
+    } else if (propertyMapping.getResultSet() != null) {
+        addPendingChildRelation(rs, metaResultObject, propertyMapping);   // TODO is that OK?
+        return DEFERED;
+    } else {
+        final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
+        final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
+        return typeHandler.getResult(rs, column);
+    }
+}
+~~~
+
+
+
+### 13、执行查询流程
+
+![1530848277314](images\mybaits-query.png)
+
+
+
+### 14、查询流程原理总结
+
+​	  1、获取sqlSessionFactory对象:
+
+​	   		解析文件的每一个信息保存在Configuration中，返回包含Configuration的DefaultSqlSession；
+	   		注意：【MappedStatement】：代表一个增删改查的详细信息
+	  
+
+##### 	   2、获取sqlSession对象
+
+​	   		返回一个DefaultSQlSession对象，包含Executor和Configuration;
+	   		这一步会创建Executor对象；
+	   
+
+##### 	  3、获取接口的代理对象（MapperProxy）
+
+​	   		getMapper，使用MapperProxyFactory创建一个MapperProxy的代理对象
+	  		代理对象里面包含了，DefaultSqlSession（Executor）
+
+##### 	   4、执行增删改查方法
+
+​	  
+
+##### 	   总结：
+
+​	   	1、根据配置文件（全局，sql映射）初始化出Configuration对象
+	   	2、创建一个DefaultSqlSession对象，
+	   		他里面包含Configuration以及
+	   		Executor（根据全局配置文件中的defaultExecutorType创建出对应的Executor）
+	        3、DefaultSqlSession.getMapper（）：拿到Mapper接口对应的MapperProxy；
+	        4、MapperProxy里面有（DefaultSqlSession）；
+	        5、执行增删改查方法：
+	   		1）、调用DefaultSqlSession的增删改查（Executor）；
+	    		2）、会创建一个StatementHandler对象。
+	    			（同时也会创建出ParameterHandler和ResultSetHandler）
+	    		3）、调用StatementHandler预编译参数以及设置参数值;
+	    			使用ParameterHandler来给sql设置参数
+	    		4）、调用StatementHandler的增删改查方法；
+	    		5）、ResultSetHandler封装结果
+	    注意：
+	    	四大对象（Executor,statementHandler,ResultSetHandler,TypeHandlerx）每个创建的时候都有一个interceptorChain.pluginAll(parameterHandler);
+	   
+ 
+![1530855137148](images\mybatis-query1.png)
+
+![1530848672089](images\mybatis-exection.png)
+

@@ -4,13 +4,13 @@
 
 ### 1、获取SqlSession  
 
-        ~~~java
+~~~java
 @Override
 public SqlSession openSession() {
       //defaultExecutorType 执行器默认类型 SIMPLE
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
 }
-        ~~~
+~~~
 
 > **defaultExecutorType**:配置默认的执行器。
 
@@ -44,7 +44,7 @@ private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionI
   }
 ~~~
 
-##### 1.1.1  创建SIMPLE类型的执行器 Executor
+##### 1.1.1  创建SimpleExecutor类型的执行器 Executor
 
 Executor  :做增删改查操作
 
