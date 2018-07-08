@@ -1,4 +1,4 @@
-# Servlet3 ServletContainerInitializer与Spring Web和原理：
+# SpringMVC学习笔记（一）ServletContainerInitializer与Spring MVC加载原理：
 
  文档地址：https://docs.spring.io/spring/docs/5.0.2.RELEASE/spring-framework-reference/web.html#mvc-introduction
 
@@ -83,7 +83,7 @@ Tomcat容器的`ServletContainerInitializer`机制的实现，主要交由Contex
 
  
 
-####    4.1 AbstractContextLoaderInitializer 
+####    4.1 创建根容器  AbstractContextLoaderInitializer 
 
 ~~~java
 //AbstractContextLoaderInitializer
