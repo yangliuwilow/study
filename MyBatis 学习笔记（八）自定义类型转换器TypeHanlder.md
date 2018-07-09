@@ -1,4 +1,4 @@
-# MyBatis 学习笔记（八）自定义类型转换器TypeHeder
+# MyBatis 学习笔记（八）自定义类型转换器TypeHanlder
 
 使用场景：mybatis在预处理语句（PreparedStatement）中设置一个参数时，或者从结果集（ResultSet）中取出一个值时，都会用到TypeHandler。它的作用就是将java类型（javaType）转化为jdbc类型（jdbcType），或者将jdbc类型（jdbcType）转化为java类型（javaType）。 
 
