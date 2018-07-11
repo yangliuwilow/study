@@ -26,6 +26,15 @@ Docker-CEsudo yum makecache fastsudo yum -y install docker-ce
 sudo service docker start
 ```
 
+安装参考：https://www.cnblogs.com/yufeng218/p/8370670.html
+
+### docker 商用命令
+
+~~~shell
+docker rm    id  # 删除容器
+docker rmi   imageId  #删除镜像
+~~~
+
 
 
 
