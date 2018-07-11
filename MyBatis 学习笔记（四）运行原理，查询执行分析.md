@@ -1,6 +1,18 @@
 # MyBatis 学习笔记（四）运行原理，查询执行分析
 
 ```java
+public SqlSessionFactory getSqlSessionFactory() {
+    String resource = "mybatis-config.xml";
+    InputStream inputStream = null;
+    try {
+        inputStream = Resources.getResourceAsStream(resource);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    SqlSessionFactory sqlSessionFactory=new SqlSessionFactoryBuilder().build(inputStream);
+    return sqlSessionFactory ;
+}
+
 @Test
 public void mybatisMapper() {
     // 1、获取sqlSessionFactory对象
@@ -589,7 +601,7 @@ private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject
 	    注意：
 	    	四大对象（Executor,statementHandler,ResultSetHandler,TypeHandlerx）每个创建的时候都有一个interceptorChain.pluginAll(parameterHandler);
 	   
- 
+
 ![1530855137148](images\mybatis-query1.png)
 
 ![1530848672089](images\mybatis-exection.png)

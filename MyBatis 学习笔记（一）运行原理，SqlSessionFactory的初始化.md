@@ -9,6 +9,7 @@
 ​         注意：【MappedStatement】：代表一个增删改查的详细信息
 
 ~~~java
+//SqlSessionFactoryBuilder
 public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
     try {
         //创建解析器
