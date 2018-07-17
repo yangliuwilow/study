@@ -4,11 +4,12 @@
 
 
 
+ https://blog.csdn.net/mrzhangxl/article/details/76347451
 
+https://blog.csdn.net/peace_hehe/article/category/7449148
 
+http://dubbo.apache.org/#!/docs/dev/design.md?lang=zh-cn
 
+https://blog.csdn.net/flashflight/article/details/43939275
 
-- <https://github.com/daniellitoc/dubbo-Research/tree/readme/dubbo-config/dubbo-config-spring>
-- <https://github.com/daniellitoc/dubbo-Research/tree/readme/dubbo-config/dubbo-config-api>
-- <https://github.com/daniellitoc/dubbo-Research/tree/readme/dubbo-common>
-- <https://github.com/daniellitoc/dubbo-Research/tree/readme/dubbo-rpc/dubbo-rpc-api>
+https://blog.csdn.net/flashflight/article/details/44318447#comments
