@@ -1,5 +1,9 @@
 # Dubbo 源码学习笔记（一）Spring容器解析dubbo配置流程
 
+​         基于dubbo-2.6.0.jar 内的 META-INF/spring.hanlers  配置，Spring 在遇到dubbo命名空间的时，会回调DubboNamespaceHandler。
+
+​        所有dubbo的标签，都统一用DubboBeanDefinitionParser 进行解析，基于一对一属性的映射，将XML标签解析为Bean对象。
+
 ### 一、启动Spring 容器
 
 ~~~java
@@ -175,6 +179,8 @@ private Map<String, Object> getHandlerMappings() {
 ##### 5.1.2 、DubboNamespaceHandler注册xml标签解析器
 
 Dubbo有10个标签，每个标签会解析到对应的实体上，每个实体中的属性对应标签中的属性 
+
+也就是说spring启动过程中，随着Spring在初始化过程中，碰到dubbo命名的标签，如（`<dubbo:service>`,`<dubbo:registry>`）等标签，会由`DubboNamespaceHandler`类处理，具体原理见链接[Spring自定义标签](https://www.jianshu.com/p/16b72c10fca8) 
 
 ~~~java
 public class DubboNamespaceHandler extends NamespaceHandlerSupport {
