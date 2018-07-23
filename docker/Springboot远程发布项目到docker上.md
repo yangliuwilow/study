@@ -10,6 +10,12 @@
 
 ~~~shell
 ExecStart=/usr/bin/dockerd -H tcp://192.168.7.108:2375 -H unix://var/run/docker.sock
+#添加阿里云的云加速配置：
+ExecStart=/usr/bin/dockerd -H tcp://192.168.7.108:2375 -H unix://var/run/docker.sock --registry-mirror=https://nyw0e37l.mirror.aliyuncs.com
+
+#https://dev.aliyun.com/search.html
+#https://cr.console.aliyun.com/?spm=5176.1971733.0.2.NvBa2K#/accelerator
+
 ~~~
 
 ### **3、刷新配置**
@@ -115,7 +121,7 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urando
 
 
 
-#### 6.1、JAVA8_HOME在 maven 中setting.xml 配置
+#### 7.1、JAVA8_HOME在 maven 中setting.xml 配置
 
 ~~~xml
 <profiles>
