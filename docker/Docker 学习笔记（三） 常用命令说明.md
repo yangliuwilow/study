@@ -1,4 +1,4 @@
-#  Docker 学习笔记（一）常用命令说明
+#  Docker 学习笔记（二）常用命令参数说明
 
 ### 一、Docker run 命令，创建一个新的容器并运行一个命令
 
@@ -187,7 +187,7 @@ root@e961a7327d43:/usr/local/tomcat# ls
 
 ##### 语法：
 
-```
+```shell
 docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
 ```
 
@@ -203,4 +203,30 @@ docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
 ```
 
 
+
+### 九、Docker commit 命令，从容器创建一个新的镜像。
+
+##### 语法
+
+```
+docker commit [OPTIONS] CONTAINER [REPOSITORY[:TAG]]
+```
+
+OPTIONS说明：
+
+- **-a :**提交的镜像作者；
+- **-c :**使用Dockerfile指令来创建镜像；
+- **-m :**提交时的说明文字；
+- **-p :**在commit时，将容器暂停。
+
+#####  实例：
+
+~~~shell
+[root@localhost local]# docker ps -a  #查看容器
+# 根据容器ID=e961a7327d43 的tomcat创建一个新的willow/tomcat:v1镜像，
+[root@localhost local]# docker commit -a "willow" -m "my tomcat"  e961a7327d43  willow/tomcat:v1
+[root@localhost local]# docker images  #查看镜像，生成了一个新的tomcat镜像
+#启动刚才新创建的镜像，访问http://ip:8083  
+[root@localhost ~]# docker run -d -p 8083:8080 --name mytomcat8083  8b0fa81a01b3
+~~~
 

@@ -1,4 +1,4 @@
-# 一、docker容器的安装
+### 一、docker容器的安装
 
 1、Docker 要求 CentOS 系统的内核版本高于 3.10 ，查看本页面的前提条件来验证你的CentOS 版本是否支持 Docker 。
 
@@ -21,25 +21,36 @@ Step 3: 更新并安装
 
 Docker-CEsudo yum makecache fastsudo yum -y install docker-ce
 
- Step 4: 开启Docker服务
+Step 4: 开启Docker服务
 
 sudo service docker start
 ```
 
 安装参考：https://www.cnblogs.com/yufeng218/p/8370670.html
 
-### docker 商用命令
+###  二、  Docker 常用命令
 
-~~~shell
-docker rm    id  # 删除容器
-docker rmi   imageId  #删除镜像
-~~~
+| 命令                               | 说明                                                     |
+| ---------------------------------- | -------------------------------------------------------- |
+| docker -verion                     | 版本                                                     |
+| docker info                        | docker信息                                               |
+| docker --help                      | 帮助信息                                                 |
+| docker  search -s 30 tomcat        | 搜索点赞数超过30的 镜像                                  |
+| docker  pull tomcat                | 等价于  docker pull tomcat:latest    默认tag为latest版本 |
+| docker  iamges                     | 显示镜像                                                 |
+| docker  images -q                  | 只显示镜像的ID                                           |
+| docker rmi -f $(docker images -qa) | 批量删除镜像                                             |
+| docker rmi  tomcat:latest          | 删除tomcat镜像                                           |
+| docker rmi  -f   tomcat:latest     | -f  强制删除                                             |
+| docker search centos               | 搜索镜像                                                 |
+| docker rm -f$(docker ps -a -q )    | 批量删除多个容器                                         |
+| docker ps -a -q \|xargs docker rm  | 批量删除多个容器                                         |
+| docker start  myrunoob             | 启动已被停止的容器myrunoob                               |
+| docker stop   myrunoob             | 停止运行中的容器myrunoob                                 |
 
 
 
-
-
-### docker Tomcat安装
+### 三、docker Tomcat安装
 
 ```shell
 [root@localhost ~]# docker pull tomcat
@@ -57,7 +68,7 @@ docker stop  容器的id
 docker start 容器id
 ```
 
-### docker Mysql安装
+### 四、docker Mysql安装
 
 ```shell
 #下载
@@ -74,7 +85,7 @@ mysql               5.5              a8a59477268d        5 weeks ago         445
 
 
 
-### docker  redis安装
+### 五、docker  redis安装
 
 ```shell
 docker  redis安装
@@ -94,7 +105,7 @@ redis               latest              bfcb1f6df2db        5 weeks ago         
 
 ```
 
-### docker  zookeeper安装
+### 六、docker  zookeeper安装
 
 ```shell
 
@@ -115,7 +126,7 @@ registry.docker-cn.com/library/zookeeper   latest              2a8fecd00fba     
 
 
 
-### docker  rabbitmq安装
+### 七、docker  rabbitmq安装
 
 ```shell
 #第一步搜索
@@ -135,7 +146,7 @@ rabbitmq            3.7.3-management    2f415b0e9a6e        3 months ago        
 
 
 
-### docker elasticsearch安装（安装2.4.6版本的）
+### 八、docker elasticsearch安装（安装2.4.6版本的）
 
 ```shell
 docker  search elasticsearch    //搜索
