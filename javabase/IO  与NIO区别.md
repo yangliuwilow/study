@@ -8,6 +8,12 @@ jdk1.7之后AIO   ：异步、非阻塞IO
 
 
 
+
+
+IO  与NIO区别：阻塞和非阻塞,  通道+选择器
+
+
+
 ~~~java
 package com.willow.io;
 
