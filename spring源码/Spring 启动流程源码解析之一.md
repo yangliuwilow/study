@@ -4,6 +4,8 @@
 
 spring  version:4.3.12  ，尚硅谷Spring注解驱动开发—源码部分
 
+https://www.bilibili.com/video/av20967380/?p=44  
+
 ```java
 //refresh():543, AbstractApplicationContext (org.springframework.context.support) 
 public void refresh() throws BeansException, IllegalStateException {
@@ -93,7 +95,7 @@ protected void prepareRefresh() {
     initPropertySources();   
     // 校验配置文件的属性，合法性
     getEnvironment().validateRequiredProperties();
-    //保存容器中的一些事件
+    //保存容器中的一些事件,事件派发器创建好了后派发这些事件
     this.earlyApplicationEvents = new LinkedHashSet<ApplicationEvent>();
 }
 ~~~
@@ -140,7 +142,9 @@ protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
     BeanFactory beanFactory */
     beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
     beanFactory.registerResolvableDependency(ResourceLoader.class, this);
+    //事件派发器
     beanFactory.registerResolvableDependency(ApplicationEventPublisher.class, this);
+    //IOC容器
     beanFactory.registerResolvableDependency(ApplicationContext.class, this);
 
     // 5）、添加BeanPostProcessor【ApplicationListenerDetector】后置处理器，在bean初始化前后的一些工作
@@ -169,7 +173,11 @@ protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 }
 ~~~
 
-## 5 执行BeanFactoryPostProcessor的后置处理器方法（BeanFactory）；
+## 4、 BeanFactory准备工作完成后进行的后置处理工作；
+
+ 4.1）、抽象的方法，当前未做处理。子类通过重写这个方法来在BeanFactory创建并预准备完成以后做进一步的设置
+
+## 5、 执行BeanFactoryPostProcessor的后置处理器方法（BeanFactory）；
 
 ```java
 protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
@@ -332,12 +340,12 @@ bean的创建拦截器
 不同接口类型的BeanPostProcessor；在Bean创建前后的执行时机是不一样的
 
 - BeanPostProcessor、
-- DestructionAwareBeanPostProcessor、
+- DestructionAwareBeanPostProcessor、   在销毁的时候处理
 - InstantiationAwareBeanPostProcessor、   在createBean()方法中处理的，bean创建之前调用的
 - SmartInstantiationAwareBeanPostProcessor、 
 - MergedBeanDefinitionPostProcessor【internalPostProcessors】  （bean创建完成后调用，11章节中）
 
-```
+```java
 registerBeanPostProcessors(beanFactory);
 ```
 
